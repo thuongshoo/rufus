@@ -1689,7 +1689,7 @@ DWORD WINAPI FormatThread(void* param)
 	uint8_t *buffer = NULL, extra_partitions = 0;
 	char *bb_msg, *volume_name = NULL;
 	char drive_name[] = "?:\\";
-	char drive_letters[27], fs_name[32], label[64];
+	char drive_letters[27], fs_name[32], label[64], drive_letters2[27];
 	char logfile[MAX_PATH], *userdir;
 	char efi_dst[] = "?:\\efi\\boot\\bootx64.efi";
 	char kolibri_dst[] = "?:\\MTLD_F32";
@@ -1725,14 +1725,13 @@ DWORD WINAPI FormatThread(void* param)
 		FormatStatus = ERROR_SEVERITY_ERROR|FAC(FACILITY_STORAGE)|ERROR_OPEN_FAILED;
 		goto out;
 	}
-
+	
 	// At this stage we have both a handle and a lock to the physical drive
 	if (!GetDriveLetters(DriveIndex, drive_letters)) {
 		uprintf("Failed to get a drive letter");
 		FormatStatus = ERROR_SEVERITY_ERROR|FAC(FACILITY_STORAGE)|APPERR(ERROR_CANT_ASSIGN_LETTER);
 		goto out;
 	}
-
 	// Unassign all drives letters
 	drive_name[0] = RemoveDriveLetters(DriveIndex, TRUE, FALSE);
 	if (drive_name[0] == 0) {
@@ -1948,6 +1947,22 @@ DWORD WINAPI FormatThread(void* param)
 	}
 	CHECK_FOR_USER_CANCEL;
 
+	// Get drive letter again
+	if (!GetDriveLetters(DriveIndex, drive_letters2)) {
+		uprintf("Failed to get a drive letter");
+		FormatStatus = ERROR_SEVERITY_ERROR | FAC(FACILITY_STORAGE) | APPERR(ERROR_CANT_ASSIGN_LETTER);
+		goto out;
+	}
+	// automatic mounting was disable, we have to mount disk by ourself.
+	if ( strncmp(drive_letters, drive_letters2, 27) != 0) {
+		volume_name = GetLogicalName(DriveIndex, 0, TRUE, TRUE);
+		if (!MountVolume(drive_name, volume_name)) {
+			uprintf("Could not remount %s as %C: %s\n", volume_name, drive_name[0], WindowsErrorString());
+			FormatStatus = ERROR_SEVERITY_ERROR | FAC(FACILITY_STORAGE) | APPERR(ERROR_CANT_MOUNT_VOLUME);
+			goto out;
+		}
+	}
+	
 	// Format Casper partition if required. Do it before we format anything with
 	// a file system that Windows will recognize, to avoid concurrent access.
 	if (extra_partitions & XP_CASPER) {
