@@ -28,7 +28,7 @@ RUFUS_URL "\\line\n"
 "\\fs18%s\\line\n"
 "\\line\n"
 "%s\\line\n"
-"https://github.com/pbatard/rufus/issues\\line\n"
+"https://github.com/thuongshoo/rufus/issues\\line\n"
 "\\line\n"
 "\\b\\fs19 %s\\b0}";
 

@@ -34,7 +34,7 @@
  */
 //#define RUFUS_TEST
 
-#define APPLICATION_NAME            "Rufus"
+#define APPLICATION_NAME            "Rufus built by thuongshoo"
 #if defined(_M_AMD64)
 #define APPLICATION_ARCH            "x64"
 #elif defined(_M_IX86)
